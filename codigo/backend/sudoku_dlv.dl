@@ -1,0 +1,50 @@
+% --- Reglas de Sudoku para DLV ---
+% NOTA: El script de Python inyecta automáticamente "#const n=..." al inicio.
+% Por lo tanto, 'n' y 's' (donde s = n*n) ya estarán definidos al correr.
+
+% 1. Dominios
+% Definimos los rangos de valores posibles (1..s) y posiciones (0..s-1).
+val(1..s).
+pos(0..s-1).
+
+% 2. Mapeo de la entrada
+% Convertimos el input de Python en un predicado interno más manejable.
+given(R, C, V) :- given_input(R, C, V).
+
+% 3. GENERADOR (La parte más importante en DLV)
+% Usamos disyunción: Para cada celda y valor, el sudoku TIENE ese valor O NO lo tiene.
+sudoku(R, C, V) | no_sudoku(R, C, V) :- pos(R), pos(C), val(V).
+
+% 4. RESTRICCIONES ESTRUCTURALES
+
+% A) Completitud: Cada celda debe tener asignado AL MENOS un valor.
+has_val(R, C) :- sudoku(R, C, V).
+:- pos(R), pos(C), not has_val(R, C).
+
+% B) Unicidad: Una celda NO puede tener más de un valor.
+:- sudoku(R, C, V1), sudoku(R, C, V2), V1 < V2.
+
+% C) Respetar Pistas: Si se dio un número inicial, la solución debe tenerlo.
+:- given(R, C, V), not sudoku(R, C, V).
+
+% 5. REGLAS DE SUDOKU
+
+% Fila única: En la fila R, no puede repetirse el valor V.
+:- sudoku(R, C1, V), sudoku(R, C2, V), C1 < C2.
+
+% Columna única: En la columna C, no puede repetirse el valor V.
+:- sudoku(R1, C, V), sudoku(R2, C, V), R1 < R2.
+
+% Bloque único:
+% Calculamos a qué bloque pertenece cada celda para simplificar la restricción.
+% La fórmula es: B = (R / n) * n + (C / n).
+block_id(R, C, B) :- pos(R), pos(C), B = (R/n)*n + (C/n).
+
+% No puede haber el mismo valor V en dos celdas distintas del mismo bloque B.
+:- sudoku(R1, C1, V), sudoku(R2, C2, V), 
+   block_id(R1, C1, B), block_id(R2, C2, B), 
+   R1 != R2.
+
+:- sudoku(R1, C1, V), sudoku(R2, C2, V), 
+   block_id(R1, C1, B), block_id(R2, C2, B), 
+   C1 != C2.
