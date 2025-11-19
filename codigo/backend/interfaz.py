@@ -45,7 +45,7 @@ class SudokuApp:
         ttk.OptionMenu(ctrl_frame, self.size_var, "9x9 (N=3)", *SUDOKU_SIZES.keys(), command=self.on_size_change).pack(side="left", padx=5)
         
         ttk.Label(ctrl_frame, text="Dificultad:").pack(side="left")
-        ttk.OptionMenu(ctrl_frame, self.diff_var, "Normal", *DIFFICULTY_LEVELS.keys()).pack(side="left", padx=5)
+        ttk.OptionMenu(ctrl_frame, self.diff_var, "Normal", *DIFFICULTY_LEVELS.keys(), command=self.on_diff_change).pack(side="left", padx=5)
 
         ttk.Label(ctrl_frame, text="Solver:").pack(side="left")
         ttk.OptionMenu(ctrl_frame, self.solver_var, "clingo", "clingo", "dlv").pack(side="left", padx=5)
@@ -209,6 +209,21 @@ class SudokuApp:
     def reset_board(self):
         """Vuelve a cargar solo los números originales del puzzle, borrando la entrada del usuario."""
         self.update_ui(self.puzzle_grid)
+
+    def on_diff_change(self, val):
+        """Se dispara cuando el usuario cambia la opción de dificultad."""
+        try:
+            diff = DIFFICULTY_LEVELS.get(val, 0.55)  # fallback a Normal
+            # Si ya tenemos una solución completa, solo rehacemos el puzzle con la nueva dificultad
+            if self.full_solution:
+                self.puzzle_grid = sudoku_solver.create_puzzle(self.full_solution, self.s, diff)
+                self.update_ui(self.puzzle_grid)
+            else:
+                # Si no hay solución completa, generamos todo (similar a new_game)
+                self.new_game()
+        except Exception as e:
+            messagebox.showerror("Error al cambiar dificultad", str(e))
+
 
 def verify_files():
     """Verifica si los archivos de reglas existen."""
