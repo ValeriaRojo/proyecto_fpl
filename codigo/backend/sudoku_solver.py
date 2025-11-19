@@ -8,12 +8,12 @@ from typing import List, Optional, Tuple
 Grid = List[List[int]]
 
 # Nombres de los ejecutables (ASEGÚRATE DE TENERLOS EN TU PATH O CARPETA)
-CLINGO_EXEC = "clingo"  
-DLV_EXEC = "dlv"       # O la ruta a tu ejecutable dlv (ej: ./dlv.bin)
+CLINGO_EXEC = "C:/Users/Valeria Rojo/Downloads/clingo-4.5.4-win64/clingo-4.5.4-win64/clingo.exe" # O la ruta a tu ejecutable clingo (ej: ./clingo.bin)
+DLV_EXEC = "C:/Users/Valeria Rojo/Desktop/dlv.mingw"       # O la ruta a tu ejecutable dlv (ej: ./dlv.bin)
 
 # Archivos de reglas
 CLINGO_FILE = "sudoku_clingo.lp"
-DLV_FILE = "sudoku_dlv.dlv"
+DLV_FILE = "sudoku_dlv.dl"
 
 def parse_output(output: str) -> Optional[Grid]:
     """
