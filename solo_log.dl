@@ -1,0 +1,34 @@
+% --- solo_logica.dl (VERSION BLINDADA) ---
+
+% 1. CONOCIMIENTO BASE
+conocido(R,C,V) :- inicial(R,C,V).
+
+% 2. CONFLICTOS
+% Definimos explícitamente los dominios con val() para que sea seguro
+conflicto(R,C,V) :- conocido(R,X,V), val(C), X != C.
+conflicto(R,C,V) :- conocido(Y,C,V), val(R), Y != R.
+% Región separada en dos reglas para evitar tuplas complejas
+conflicto(R,C,V) :- conocido(R2,C2,V), region(R,C,ID), region(R2,C2,ID), R != R2.
+conflicto(R,C,V) :- conocido(R2,C2,V), region(R,C,ID), region(R2,C2,ID), C != C2.
+
+% 3. CANDIDATOS (AQUÍ ESTABA EL ERROR)
+% Paso A: Definimos qué celdas están ocupadas (sin usar negación todavía)
+ocupada(R,C) :- conocido(R,C,V).
+
+% Paso B: Ahora sí calculamos candidatos de forma segura
+% "Es candidato si es un valor válido, la celda NO está ocupada y NO hay conflicto"
+candidato(R,C,V) :- val(R), val(C), val(V),
+                    not ocupada(R,C),
+                    not conflicto(R,C,V).
+
+% 4. ESTRATEGIA: Naked Single
+% Paso A: Contar candidatos (Agregamos val(V) dentro para ultra-seguridad)
+num_candidatos(R,C,N) :- val(R), val(C), 
+                         #count{ V : candidato(R,C,V), val(V) } = N.
+
+% Paso B: Seleccionar únicos
+es_unico(R,C,V) :- num_candidatos(R,C,1), candidato(R,C,V).
+
+% --- SALIDA PARA PYTHON ---
+cell(R,C,V) :- conocido(R,C,V).
+cell(R,C,V) :- es_unico(R,C,V).

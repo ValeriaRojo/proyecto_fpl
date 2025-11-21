@@ -1,0 +1,36 @@
+% --- estrategias.dl ---
+% Lógica deductiva para ayudar al solucionador principal
+
+% 1. DEFINIR LO QUE YA SABEMOS (Base de conocimiento)
+conocido(R,C,V) :- inicial(R,C,V).
+
+% 2. DEFINIR CANDIDATOS (Basado SOLO en pistas iniciales)
+% Un valor es candidato si no choca con nada ya puesto en el tablero
+conflicto_base(R,C,V) :- conocido(R,X,V), X != C.
+conflicto_base(R,C,V) :- conocido(Y,C,V), Y != R.
+conflicto_base(R,C,V) :- conocido(R2,C2,V), region(R,C,ID), region(R2,C2,ID), (R,C) != (R2,C2).
+
+candidato(R,C,V) :- val(R), val(C), val(V),
+                    not conocido(R,C,_),
+                    not conflicto_base(R,C,V).
+
+% 3. ESTRATEGIA: NAKED SINGLE (La más fuerte)
+% Si una celda solo tiene 1 candidato posible, ¡tiene que ser ese!
+num_candidatos(R,C,N) :- val(R), val(C), not conocido(R,C,_),
+                         #count{ V : candidato(R,C,V) } = N.
+
+forzado(R,C,V) :- num_candidatos(R,C,1), candidato(R,C,V).
+
+% 4. ESTRATEGIA: NAKED PAIRS (Pares Desnudos)
+% Detectar celdas con exactamente 2 candidatos
+bivalente(R,C) :- num_candidatos(R,C,2).
+
+% Si dos celdas en la misma fila tienen los mismos candidatos...
+par_en_fila(R,C1,C2) :- bivalente(R,C1), bivalente(R,C2), C1 < C2,
+                        #count{ V : candidato(R,C1,V), candidato(R,C2,V) } = 2.
+
+% ...entonces esos valores NO pueden ir en el resto de la fila.
+prohibido_por_logica(R,C3,V) :- par_en_fila(R,C1,C2),
+                                val(C3), C3 != C1, C3 != C2,
+                                candidato(R,C1,V), % El valor es parte del par
+                                candidato(R,C3,V). % Y quería estar en C3

@@ -1,0 +1,46 @@
+% --- sudoku.dl (Compatible con DLV) ---
+
+% 1. GENERACIÓN (Guess)
+% En lugar de { }, usamos disyunción (v). 
+% "Para cada celda y valor, o ponemos el numero o no lo ponemos"
+cell(R,C,V) v no_cell(R,C,V) :- val(R), val(C), val(V).
+
+% 2. RESTRICCIONES DE UNICIDAD EN LA CELDA
+% Auxiliar: Marcamos que la celda (R,C) tiene al menos un valor
+tiene_valor(R,C) :- cell(R,C,V).
+
+% Error si una celda se queda vacía
+:- val(R), val(C), not tiene_valor(R,C).
+
+% Error si una celda tiene más de un valor
+:- cell(R,C,V1), cell(R,C,V2), V1 != V2.
+
+% 3. RESTRICCIONES DEL SUDOKU (Filtros)
+
+% Fila: No puede haber el mismo valor V dos veces en la fila R
+:- cell(R,C1,V), cell(R,C2,V), C1 != C2.
+
+% Columna: No puede haber el mismo valor V dos veces en la columna C
+:- cell(R1,C,V), cell(R2,C,V), R1 != R2.
+
+% Región (Funciona para Regular e Irregular):
+% Si dos celdas distintas tienen el mismo ID de región, no pueden tener el mismo valor V.
+% Opción A: Error si están en la misma región y son filas distintas
+:- cell(R1,C1,V), cell(R2,C2,V), region(R1,C1,ID), region(R2,C2,ID), R1 != R2.
+
+% Opción B: Error si están en la misma región y son columnas distintas
+:- cell(R1,C1,V), cell(R2,C2,V), region(R1,C1,ID), region(R2,C2,ID), C1 != C2.
+
+% 4. PISTAS INICIALES
+% Debe respetarse lo que viene dado por el usuario
+:- inicial(R,C,V), not cell(R,C,V).
+
+% --- INTEGRACIÓN HÍBRIDA (BRIDGE) ---
+
+% 1. Si la estrategia dice que un valor está PROHIBIDO, no permitas que DLV lo elija.
+:- cell(R,C,V), prohibido_por_logica(R,C,V).
+
+% 2. Si la estrategia dice que un valor es FORZADO (única opción), obligar a ponerlo.
+:- forzado(R,C,V), not cell(R,C,V).
+
+% Esto ayuda a DLV a no perder tiempo probando caminos tontos.
